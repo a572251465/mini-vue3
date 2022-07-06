@@ -1,0 +1,6 @@
+- reactive、effect、watch、computed、ref原理
+- 手写自定义渲染器原理及RuntimeDOM中属性、事件处理
+- 手写虚拟DOM原理、手写Vue3中diff算法及最长递增子序列实现原理
+- 手写组件渲染原理、组件挂载流程、及异步渲染原理
+- 手写Vue3中生命周期原理，props、emit、slot实现原理。
+- 详解Vue3中编译优化、patchFlags、blockTree，实现靶向更新。 手写模板转化ast语法树
