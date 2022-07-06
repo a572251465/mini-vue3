@@ -1,1 +1,10 @@
-export * from './reactive'
+export {
+  readonly,
+  isReadonly,
+  reactive,
+  reactiveMap,
+  ReactiveFlags,
+  Target,
+  isReactive,
+  isProxy
+} from './reactive'

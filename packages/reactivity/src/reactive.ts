@@ -23,9 +23,22 @@ export type Target<T = boolean> = Partial<{
 }>
 
 export const reactiveMap = new WeakMap<Target, any>()
+export const readonlyMap = new WeakMap<Target, any>()
+
+export function isProxy(value: unknown): boolean {
+  return isReactive(value) || isReadonly(value)
+}
 
 export function isReadonly(value: unknown): boolean {
   return !!(value && (value as Target)[ReactiveFlags.IS_READONLY])
+}
+
+export function isReactive(value: unknown): boolean {
+  // 使用方法isReadonly 判断是否只读 && 方法isReactive 是否是响应式
+  if (isReadonly(value)) {
+    return isReactive((value as Target)[ReactiveFlags.RAW])
+  }
+  return !!(value && (value as Target)[ReactiveFlags.IS_REACTIVE])
 }
 
 // 为了创建响应式模块方法
@@ -60,16 +73,18 @@ function createReactiveObject(
   return proxy
 }
 
+//readonly入口
 export function readonly(target: object) {
   return createReactiveObject(
     target,
     true,
     readonlyHandlers,
     readonlyHandlers,
-    reactiveMap
+    readonlyMap
   )
 }
 
+// reactive入口
 export function reactive(target: object) {
   // 如果是只读的话  直接返回
   if (isReadonly(target)) return target

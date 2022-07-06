@@ -21,6 +21,8 @@ var VueReactivity = (() => {
   var src_exports = {};
   __export(src_exports, {
     ReactiveFlags: () => ReactiveFlags,
+    isProxy: () => isProxy,
+    isReactive: () => isReactive,
     isReadonly: () => isReadonly,
     reactive: () => reactive,
     reactiveMap: () => reactiveMap,
@@ -105,8 +107,18 @@ var VueReactivity = (() => {
     return ReactiveFlags2;
   })(ReactiveFlags || {});
   var reactiveMap = /* @__PURE__ */ new WeakMap();
+  var readonlyMap = /* @__PURE__ */ new WeakMap();
+  function isProxy(value) {
+    return isReactive(value) || isReadonly(value);
+  }
   function isReadonly(value) {
     return !!(value && value["__v_isReadonly" /* IS_READONLY */]);
+  }
+  function isReactive(value) {
+    if (isReadonly(value)) {
+      return isReactive(value["__v_raw" /* RAW */]);
+    }
+    return !!(value && value["__v_isReactive" /* IS_REACTIVE */]);
   }
   function createReactiveObject(target, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
     if (!isObject(target)) {
@@ -124,7 +136,7 @@ var VueReactivity = (() => {
     return proxy;
   }
   function readonly(target) {
-    return createReactiveObject(target, true, readonlyHandlers, readonlyHandlers, reactiveMap);
+    return createReactiveObject(target, true, readonlyHandlers, readonlyHandlers, readonlyMap);
   }
   function reactive(target) {
     if (isReadonly(target))
