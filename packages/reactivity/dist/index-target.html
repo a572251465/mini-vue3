@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <script src='../../../node_modules/@vue/reactivity/dist/reactivity.global.js'></script>
+  <title>reactive</title>
+</head>
+<body>
+<div id='root'></div>
+<script>
+  const { reactive, effect } = VueReactivity
+  const state = reactive({
+    name: 'lihh',
+    age: 23,
+    address: {
+      content: '111'
+    }
+  })
+  console.log(state)
+
+  effect(() => {
+    document.getElementById('root').innerHTML = `姓名：${state.name}, 年龄：${state.age}`
+  })
+</script>
+</body>
+</html>
