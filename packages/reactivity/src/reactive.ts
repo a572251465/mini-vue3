@@ -1,5 +1,5 @@
 import { isObject } from '@vue/shared'
-import { mutableHandlers } from './baseHandlers'
+import { mutableHandlers, readonlyHandlers } from './baseHandlers'
 
 export const enum ReactiveFlags {
   // 是否跳过
@@ -58,6 +58,16 @@ function createReactiveObject(
   const proxy = new Proxy(target, baseHandlers)
   proxyMap.set(target, proxy)
   return proxy
+}
+
+export function readonly(target: object) {
+  return createReactiveObject(
+    target,
+    true,
+    readonlyHandlers,
+    readonlyHandlers,
+    reactiveMap
+  )
 }
 
 export function reactive(target: object) {

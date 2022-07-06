@@ -45,6 +45,12 @@ function createSetter() {
       return false
     }
 
+    // 不是数组 旧值是ref 但是新值不是ref  直接将新值 赋值给ref.value
+    if (!Array.isArray(target) && isRef(oldValue) && !isRef(value)) {
+      oldValue.value = value
+      return true
+    }
+
     const hadKey =
       Array.isArray(target) && isIntegerKey(key)
         ? Number(key) < target.length
@@ -67,7 +73,23 @@ function createSetter() {
 const get = createGetter()
 const set = createSetter()
 
+const readonlyGet = createGetter(false)
+const readonlySet = function (target: any, key: any) {
+  console.warn(
+    `Set operation on key "${String(key)}" failed: target is readonly.`,
+    target
+  )
+  return true
+}
+
+// normal 类型的reactive
 export const mutableHandlers = {
   get,
   set
+}
+
+//
+export const readonlyHandlers = {
+  get: readonlyGet,
+  set: readonlySet
 }
