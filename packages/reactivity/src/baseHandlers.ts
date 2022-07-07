@@ -1,6 +1,6 @@
-import { isReadonly, reactive, ReactiveFlags } from './reactive'
+import { isReadonly, reactive, ReactiveFlags, track, trigger } from './reactive'
 import { isRef } from './ref'
-import { hasOwn, isIntegerKey, isObject } from '@vue/shared'
+import { hasChanged, hasOwn, isIntegerKey, isObject } from '@vue/shared'
 
 function createGetter(isReadonly = false, shallow = false) {
   return function (target: any, key: any, receiver: any): any {
@@ -18,6 +18,7 @@ function createGetter(isReadonly = false, shallow = false) {
 
     if (!isReadonly) {
       // 依赖收集
+      track(target, 'GET', key)
     }
 
     // 如果浅代理 直接返回
@@ -57,6 +58,13 @@ function createSetter() {
         : hasOwn(target, key)
     const result = Reflect.set(target, key, value, receiver)
 
+    // 开始执行依赖触发的部分
+    if (!hadKey) {
+      trigger(target, 'ADD', key)
+      // 函数 hasChanged 判断内容是否发生变化
+    } else if (hasChanged(value, oldValue)) {
+      trigger(target, 'SET', key)
+    }
     // 触发依赖收集
     return result
   }
@@ -88,7 +96,7 @@ export const mutableHandlers = {
   set
 }
 
-//
+// readonly api 的get/set函数
 export const readonlyHandlers = {
   get: readonlyGet,
   set: readonlySet

@@ -35,6 +35,7 @@ var VueReactivity = (() => {
   var isIntegerKey = (key) => isString(key) && key !== "NaN" && key[0] !== "-" && "" + parseInt(key, 10) === key;
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var hasOwn = (val, key) => hasOwnProperty.call(val, key);
+  var hasChanged = (value, oldValue) => !Object.is(value, oldValue);
 
   // packages/reactivity/src/ref.ts
   function isRef(r) {
@@ -53,6 +54,7 @@ var VueReactivity = (() => {
       }
       const res = Reflect.get(target, key, receiver);
       if (!isReadonly2) {
+        track(target, "GET", key);
       }
       if (shallow) {
         return res;
@@ -78,6 +80,11 @@ var VueReactivity = (() => {
       }
       const hadKey = Array.isArray(target) && isIntegerKey(key) ? Number(key) < target.length : hasOwn(target, key);
       const result = Reflect.set(target, key, value, receiver);
+      if (!hadKey) {
+        trigger(target, "ADD", key);
+      } else if (hasChanged(value, oldValue)) {
+        trigger(target, "SET", key);
+      }
       return result;
     };
   }
@@ -97,7 +104,15 @@ var VueReactivity = (() => {
     set: readonlySet
   };
 
+  // packages/reactivity/src/dep.ts
+  var createDep = (effects = []) => {
+    const dep = new Set(effects);
+    return dep;
+  };
+
   // packages/reactivity/src/reactive.ts
+  var weakTarget = /* @__PURE__ */ new WeakMap();
+  var activeEffect = null;
   var ReactiveFlags = /* @__PURE__ */ ((ReactiveFlags2) => {
     ReactiveFlags2["SKIP"] = "__v_skip";
     ReactiveFlags2["IS_REACTIVE"] = "__v_isReactive";
@@ -143,6 +158,53 @@ var VueReactivity = (() => {
       return target;
     return createReactiveObject(target, false, mutableHandlers, mutableHandlers, reactiveMap);
   }
+  var track = (target, type, key) => {
+    if (!activeEffect)
+      return;
+    let depsMap = weakTarget.get(target);
+    if (!depsMap) {
+      weakTarget.set(target, depsMap = /* @__PURE__ */ new Map());
+    }
+    let dep = depsMap.get(key);
+    if (!dep) {
+      dep.set(key, dep = createDep());
+    }
+    trackEffects(dep);
+  };
+  var trackEffects = (dep) => {
+    const shouldTrack = dep.has(activeEffect);
+    if (!shouldTrack) {
+      dep.add(activeEffect);
+      activeEffect.deps.push(dep);
+    }
+  };
+  var trigger = (target, type, key) => {
+    const depsMap = weakTarget.get(target);
+    if (!depsMap)
+      return;
+    const deps = [];
+    deps.push(depsMap.get(key));
+    const effects = [];
+    for (const dep of deps) {
+      if (dep) {
+        effects.push(...dep);
+      }
+    }
+    triggerEffects(createDep(effects));
+  };
+  var triggerEffects = (dep) => {
+    const effects = Array.isArray(dep) ? dep : [...dep];
+    for (const effect of effects) {
+      triggerEffect(effect);
+    }
+  };
+  var triggerEffect = (effect) => {
+    if (effect.scheduler) {
+      effect.scheduler();
+    } else {
+      effect.run();
+    }
+  };
   return __toCommonJS(src_exports);
 })();
 //# sourceMappingURL=reactivity.global.js.map
