@@ -35,9 +35,11 @@
   // // o.age = 3 此代码是不可能成功的 只读属性不能进行赋值
   //
   //
-  // effect(() => {
-  //   document.getElementById('root').innerHTML = `姓名：${state.name}, 年龄：${state.age}, ${state.status} ${o.age}`
-  // })
+  effect(() => {
+    effect(() => {
+      document.getElementById('root').innerHTML = `姓名：${state.name}, 年龄：${state.age}`
+    })
+  })
   //
   // setTimeout(() => {
   //   state.age = 23

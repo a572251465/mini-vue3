@@ -1,13 +1,7 @@
 import { isObject } from '@vue/shared'
 import { mutableHandlers, readonlyHandlers } from './baseHandlers'
-import { createDep } from './dep'
 
 // 依赖收集的过程：WeakMap => Map => effect
-
-// 收集依赖的结果集
-const weakTarget = new WeakMap()
-// 表示当前的effect
-export let activeEffect: any = null
 
 export const enum ReactiveFlags {
   // 是否跳过
@@ -105,69 +99,4 @@ export function reactive(target: object) {
     mutableHandlers,
     reactiveMap
   )
-}
-
-// 收集依赖的方法
-export const track = (target: Object, type: string, key: string) => {
-  if (!activeEffect) return
-
-  let depsMap = weakTarget.get(target)
-  if (!depsMap) {
-    weakTarget.set(target, (depsMap = new Map()))
-  }
-
-  let dep = depsMap.get(key)
-  if (!dep) {
-    dep.set(key, (dep = createDep()))
-  }
-
-  trackEffects(dep)
-}
-
-// 真正用来收集effect
-export const trackEffects = (dep: any) => {
-  const shouldTrack = dep.has(activeEffect)
-
-  if (!shouldTrack) {
-    // 添加effect依赖
-    dep.add(activeEffect!)
-    activeEffect!.deps.push(dep)
-  }
-}
-
-// 此方法用来触发依赖
-export const trigger = (target: any, type: any, key: any) => {
-  const depsMap = weakTarget.get(target)
-  if (!depsMap) return
-
-  const deps = []
-  deps.push(depsMap.get(key))
-
-  const effects = []
-  for (const dep of deps) {
-    if (dep) {
-      effects.push(...dep)
-    }
-  }
-
-  triggerEffects(createDep(effects))
-}
-
-// 触发依赖
-export const triggerEffects = (dep: any) => {
-  const effects = Array.isArray(dep) ? dep : [...dep]
-
-  for (const effect of effects) {
-    triggerEffect(effect)
-  }
-}
-
-// 执行依赖的位置
-export const triggerEffect = (effect: any) => {
-  if (effect.scheduler) {
-    effect.scheduler()
-  } else {
-    // 执行effect的run函数
-    effect.run()
-  }
 }

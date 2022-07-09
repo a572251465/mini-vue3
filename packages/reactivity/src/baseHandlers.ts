@@ -1,4 +1,5 @@
-import { isReadonly, reactive, ReactiveFlags, track, trigger } from './reactive'
+import { isReadonly, reactive, ReactiveFlags } from './reactive'
+import { track, trigger } from './effect'
 import { isRef } from './ref'
 import { hasChanged, hasOwn, isIntegerKey, isObject } from '@vue/shared'
 

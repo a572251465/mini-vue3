@@ -21,6 +21,7 @@ var VueReactivity = (() => {
   var src_exports = {};
   __export(src_exports, {
     ReactiveFlags: () => ReactiveFlags,
+    effect: () => effect,
     isProxy: () => isProxy,
     isReactive: () => isReactive,
     isReadonly: () => isReadonly,
@@ -36,6 +37,104 @@ var VueReactivity = (() => {
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var hasOwn = (val, key) => hasOwnProperty.call(val, key);
   var hasChanged = (value, oldValue) => !Object.is(value, oldValue);
+
+  // packages/reactivity/src/dep.ts
+  var createDep = (effects = []) => {
+    const dep = new Set(effects);
+    return dep;
+  };
+
+  // packages/reactivity/src/effect.ts
+  var activeEffect = null;
+  var weakTarget = /* @__PURE__ */ new WeakMap();
+  var ReactiveEffect = class {
+    constructor(fn, scheduler = null) {
+      this.fn = fn;
+      this.scheduler = scheduler;
+      this.active = true;
+      this.deps = [];
+      this.parent = void 0;
+    }
+    run() {
+      if (!this.active) {
+        return this.fn();
+      }
+      let parent = activeEffect;
+      while (parent) {
+        if (parent === this) {
+          return;
+        }
+        parent = parent.parent;
+      }
+      try {
+        this.parent = activeEffect;
+        activeEffect = this;
+        return this.fn();
+      } finally {
+        activeEffect = this.parent;
+        this.parent = void 0;
+      }
+    }
+  };
+  function effect(fn, options) {
+    if (fn.effect) {
+      fn = fn.effect.fn;
+    }
+    const _effect = new ReactiveEffect(fn);
+    if (!options || !options.lazy) {
+      _effect.run();
+    }
+    const runner = _effect.run.bind(_effect);
+    runner.effect = _effect;
+    return runner;
+  }
+  var track = (target, type, key) => {
+    if (!activeEffect)
+      return;
+    let depsMap = weakTarget.get(target);
+    if (!depsMap) {
+      weakTarget.set(target, depsMap = /* @__PURE__ */ new Map());
+    }
+    let dep = depsMap.get(key);
+    if (!dep) {
+      depsMap.set(key, dep = createDep());
+    }
+    trackEffects(dep);
+  };
+  var trackEffects = (dep) => {
+    const shouldTrack = dep.has(activeEffect);
+    if (!shouldTrack) {
+      dep.add(activeEffect);
+      activeEffect.deps.push(dep);
+    }
+  };
+  var trigger = (target, type, key) => {
+    const depsMap = weakTarget.get(target);
+    if (!depsMap)
+      return;
+    const deps = [];
+    deps.push(depsMap.get(key));
+    const effects = [];
+    for (const dep of deps) {
+      if (dep) {
+        effects.push(...dep);
+      }
+    }
+    triggerEffects(createDep(effects));
+  };
+  var triggerEffects = (dep) => {
+    const effects = Array.isArray(dep) ? dep : [...dep];
+    for (const effect2 of effects) {
+      triggerEffect(effect2);
+    }
+  };
+  var triggerEffect = (effect2) => {
+    if (effect2.scheduler) {
+      effect2.scheduler();
+    } else {
+      effect2.run();
+    }
+  };
 
   // packages/reactivity/src/ref.ts
   function isRef(r) {
@@ -104,15 +203,7 @@ var VueReactivity = (() => {
     set: readonlySet
   };
 
-  // packages/reactivity/src/dep.ts
-  var createDep = (effects = []) => {
-    const dep = new Set(effects);
-    return dep;
-  };
-
   // packages/reactivity/src/reactive.ts
-  var weakTarget = /* @__PURE__ */ new WeakMap();
-  var activeEffect = null;
   var ReactiveFlags = /* @__PURE__ */ ((ReactiveFlags2) => {
     ReactiveFlags2["SKIP"] = "__v_skip";
     ReactiveFlags2["IS_REACTIVE"] = "__v_isReactive";
@@ -158,53 +249,6 @@ var VueReactivity = (() => {
       return target;
     return createReactiveObject(target, false, mutableHandlers, mutableHandlers, reactiveMap);
   }
-  var track = (target, type, key) => {
-    if (!activeEffect)
-      return;
-    let depsMap = weakTarget.get(target);
-    if (!depsMap) {
-      weakTarget.set(target, depsMap = /* @__PURE__ */ new Map());
-    }
-    let dep = depsMap.get(key);
-    if (!dep) {
-      dep.set(key, dep = createDep());
-    }
-    trackEffects(dep);
-  };
-  var trackEffects = (dep) => {
-    const shouldTrack = dep.has(activeEffect);
-    if (!shouldTrack) {
-      dep.add(activeEffect);
-      activeEffect.deps.push(dep);
-    }
-  };
-  var trigger = (target, type, key) => {
-    const depsMap = weakTarget.get(target);
-    if (!depsMap)
-      return;
-    const deps = [];
-    deps.push(depsMap.get(key));
-    const effects = [];
-    for (const dep of deps) {
-      if (dep) {
-        effects.push(...dep);
-      }
-    }
-    triggerEffects(createDep(effects));
-  };
-  var triggerEffects = (dep) => {
-    const effects = Array.isArray(dep) ? dep : [...dep];
-    for (const effect of effects) {
-      triggerEffect(effect);
-    }
-  };
-  var triggerEffect = (effect) => {
-    if (effect.scheduler) {
-      effect.scheduler();
-    } else {
-      effect.run();
-    }
-  };
   return __toCommonJS(src_exports);
 })();
 //# sourceMappingURL=reactivity.global.js.map

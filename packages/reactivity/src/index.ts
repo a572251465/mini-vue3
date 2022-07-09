@@ -8,3 +8,5 @@ export {
   isReactive,
   isProxy
 } from './reactive'
+
+export { effect } from './effect'

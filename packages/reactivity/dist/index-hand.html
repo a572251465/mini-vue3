@@ -8,21 +8,30 @@
   <script src='./reactivity.global.js'></script>
 </head>
 <body>
+<div id='root'></div>
 <script>
-  const { reactive, readonly } = VueReactivity
+  const { reactive, readonly, effect } = VueReactivity
 
-  const data = reactive({
+  const state = reactive({
     name: 'lihh',
     age: 20
   })
 
+  effect(() => {
+    document.getElementById('root').innerHTML = `姓名：${state.name}, 年龄：${state.age}`
+  })
+
+  setTimeout(() => {
+    state.age++
+  }, 1000)
+
   // console.log(data)
 
-  const o = readonly({
-    age: 2
-  })
-  console.log(o)
-  o.age = 3
+  // const o = readonly({
+  //   age: 2
+  // })
+  // console.log(o)
+  // o.age = 3
 </script>
 </body>
 </html>
