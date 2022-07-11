@@ -1,4 +1,4 @@
-var VueReactivity = (() => {
+var VueRuntimeCore = (() => {
   var __defProp = Object.defineProperty;
   var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
   var __getOwnPropNames = Object.getOwnPropertyNames;
@@ -17,18 +17,9 @@ var VueReactivity = (() => {
   };
   var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-  // packages/reactivity/src/index.ts
+  // packages/runtime-core/src/index.ts
   var src_exports = {};
   __export(src_exports, {
-    ReactiveFlags: () => ReactiveFlags,
-    effect: () => effect,
-    isProxy: () => isProxy,
-    isReactive: () => isReactive,
-    isReadonly: () => isReadonly,
-    isRef: () => isRef,
-    reactive: () => reactive,
-    reactiveMap: () => reactiveMap,
-    readonly: () => readonly,
     watch: () => watch
   });
 
@@ -78,18 +69,6 @@ var VueReactivity = (() => {
       }
     }
   };
-  function effect(fn, options) {
-    if (fn.effect) {
-      fn = fn.effect.fn;
-    }
-    const _effect = new ReactiveEffect(fn);
-    if (!options || !options.lazy) {
-      _effect.run();
-    }
-    const runner = _effect.run.bind(_effect);
-    runner.effect = _effect;
-    return runner;
-  }
   var track = (target, type, key) => {
     if (!activeEffect)
       return;
@@ -126,15 +105,15 @@ var VueReactivity = (() => {
   };
   var triggerEffects = (dep) => {
     const effects = Array.isArray(dep) ? dep : [...dep];
-    for (const effect2 of effects) {
-      triggerEffect(effect2);
+    for (const effect3 of effects) {
+      triggerEffect(effect3);
     }
   };
-  var triggerEffect = (effect2) => {
-    if (effect2.scheduler) {
-      effect2.scheduler();
+  var triggerEffect = (effect3) => {
+    if (effect3.scheduler) {
+      effect3.scheduler();
     } else {
-      effect2.run();
+      effect3.run();
     }
   };
 
@@ -192,33 +171,13 @@ var VueReactivity = (() => {
   var get = createGetter();
   var set = createSetter();
   var readonlyGet = createGetter(false);
-  var readonlySet = function(target, key) {
-    console.warn(`Set operation on key "${String(key)}" failed: target is readonly.`, target);
-    return true;
-  };
   var mutableHandlers = {
     get,
     set
   };
-  var readonlyHandlers = {
-    get: readonlyGet,
-    set: readonlySet
-  };
 
   // packages/reactivity/src/reactive.ts
-  var ReactiveFlags = /* @__PURE__ */ ((ReactiveFlags2) => {
-    ReactiveFlags2["SKIP"] = "__v_skip";
-    ReactiveFlags2["IS_REACTIVE"] = "__v_isReactive";
-    ReactiveFlags2["IS_READONLY"] = "__v_isReadonly";
-    ReactiveFlags2["IS_SHALLOW"] = "__v_isShallow";
-    ReactiveFlags2["RAW"] = "__v_raw";
-    return ReactiveFlags2;
-  })(ReactiveFlags || {});
   var reactiveMap = /* @__PURE__ */ new WeakMap();
-  var readonlyMap = /* @__PURE__ */ new WeakMap();
-  function isProxy(value) {
-    return isReactive(value) || isReadonly(value);
-  }
   function isReadonly(value) {
     return !!(value && value["__v_isReadonly" /* IS_READONLY */]);
   }
@@ -243,16 +202,13 @@ var VueReactivity = (() => {
     proxyMap.set(target, proxy);
     return proxy;
   }
-  function readonly(target) {
-    return createReactiveObject(target, true, readonlyHandlers, readonlyHandlers, readonlyMap);
-  }
   function reactive(target) {
     if (isReadonly(target))
       return target;
     return createReactiveObject(target, false, mutableHandlers, mutableHandlers, reactiveMap);
   }
 
-  // packages/reactivity/src/apiWatch.ts
+  // packages/runtime-core/src/apiWatch.ts
   function doWatch(source, cb, options) {
     let { immediate, deep } = options;
     let getter;
@@ -266,22 +222,22 @@ var VueReactivity = (() => {
     }
     let oldValue = void 0;
     const job = () => {
-      if (!effect2.active)
+      if (!effect3.active)
         return;
       if (cb) {
-        const newValue = effect2.run();
+        const newValue = effect3.run();
         if (hasChanged(oldValue, newValue)) {
           cb(oldValue, newValue);
         }
       } else
-        [effect2.run()];
+        [effect3.run()];
     };
-    const effect2 = new ReactiveEffect(getter, job);
+    const effect3 = new ReactiveEffect(getter, job);
     if (cb) {
       if (immediate) {
         job();
       } else {
-        oldValue = effect2.run();
+        oldValue = effect3.run();
       }
     }
   }
@@ -290,4 +246,4 @@ var VueReactivity = (() => {
   }
   return __toCommonJS(src_exports);
 })();
-//# sourceMappingURL=reactivity.global.js.map
+//# sourceMappingURL=runtime-core.global.js.map

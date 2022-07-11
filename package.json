@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev:reactivity": "node scripts/dev.js reactivity -f global"
+    "dev:reactivity": "node scripts/dev.js reactivity -f global",
+    "dev:runtimeCore": "node scripts/dev.js runtime-core -f global"
   },
   "keywords": [],
   "author": "",

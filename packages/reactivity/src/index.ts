@@ -10,3 +10,7 @@ export {
 } from './reactive'
 
 export { effect } from './effect'
+
+export { isRef } from './ref'
+
+export { watch } from './apiWatch'
