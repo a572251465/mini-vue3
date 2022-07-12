@@ -1,66 +1,77 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
-    />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <script src="../../../node_modules/vue/dist/vue.global.js"></script>
-    <title>reactive</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script>
-      const { reactive, effect, ref, readonly, toRaw, watch } = Vue
-      const state = reactive({
-        name: 'lihh',
-        age: 23
-      })
-      // watch 练习部分
-      watch(
-        () => state.age,
-        (newValue, oldValue) => {
-          console.log(newValue, oldValue)
-        }
-      )
+<html lang='en'>
+<head>
+  <meta charset='UTF-8' />
+  <meta
+    name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'
+  />
+  <meta http-equiv='X-UA-Compatible' content='ie=edge' />
+  <script src='../../../node_modules/vue/dist/vue.global.js'></script>
+  <title>reactive</title>
+</head>
+<body>
+<div id='root'></div>
+<script>
+  const { reactive, effect, ref, readonly, toRaw, watch, computed } = Vue
+  const state = reactive({
+    name: 'lihh',
+    age: 23
+  })
 
-      setTimeout(() => {
-        state.age++
-      }, 2000)
+  const age = computed(() => state.age * 2)
 
-      // console.log(toRaw(state))
+  effect(() => {
+    document.getElementById('root').innerHTML = `姓名是：${state.name}, 年龄是：${age.value}`
+  })
 
-      // const status = ref(false)
-      // const state = reactive({
-      //   name: 'lihh',
-      //   age: 23,
-      //   address: {
-      //     content: '111'
-      //   },
-      //   status
-      // })
-      // // console.log(state)
-      //
-      // const o = readonly({
-      //   age: 2
-      // })
-      // // console.log(o.age)
-      // // o.age = 3 此代码是不可能成功的 只读属性不能进行赋值
-      //
-      //
-      // effect(() => {
-      //   effect(() => {
-      //     document.getElementById(
-      //       'root'
-      //     ).innerHTML = `姓名：${state.name}, 年龄：${state.age}`
-      //   })
-      // })
-      //
-      // setTimeout(() => {
-      //   state.age = 23
-      // }, 2000)
-    </script>
-  </body>
+  setTimeout(() => {
+    state.age = 30
+  }, 1000)
+
+  // watch 练习部分
+  // watch(
+  //   () => state.age,
+  //   (newValue, oldValue) => {
+  //     console.log(newValue, oldValue)
+  //   }
+  // )
+  //
+  // setTimeout(() => {
+  //   state.age++
+  // }, 2000)
+
+  // console.log(toRaw(state))
+
+  // const status = ref(false)
+  // const state = reactive({
+  //   name: 'lihh',
+  //   age: 23,
+  //   address: {
+  //     content: '111'
+  //   },
+  //   status
+  // })
+  // // console.log(state)
+  //
+  // const o = readonly({
+  //   age: 2
+  // })
+  // // console.log(o.age)
+  // // o.age = 3 此代码是不可能成功的 只读属性不能进行赋值
+  //
+  //
+  // effect(() => {
+  //   effect(() => {
+  //     document.getElementById(
+  //       'root'
+  //     ).innerHTML = `姓名：${state.name}, 年龄：${state.age}`
+  //   })
+  // })
+  //
+  // setTimeout(() => {
+  //   state.age = 23
+  // }, 2000)
+</script>
+</body>
 </html>

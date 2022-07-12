@@ -14,28 +14,38 @@
 <body>
 <div id='root'></div>
 <script>
-  const { reactive, readonly, effect, watch } = VueReactivity
+  const { reactive, readonly, effect, watch, computed } = VueReactivity
 
   const state = reactive({
     name: 'lihh',
-    age: 20
+    age: 23
   })
+
+  const age = computed(() => state.age * 2)
+
+  effect(() => {
+    document.getElementById('root').innerHTML = `姓名是：${state.name}, 年龄是：${age.value}`
+  })
+
+  setTimeout(() => {
+    state.age = 30
+  }, 1000)
 
   // effect(() => {
   //   document.getElementById(
   //     'root'
   //   ).innerHTML = `姓名：${state.name}, 年龄：${state.age}`
   // })
-  watch(
-    () => state.age,
-    (oldValue, newValue) => {
-      console.log(oldValue, newValue)
-    }
-  )
-
-  setTimeout(() => {
-    state.age++
-  }, 1000)
+  // watch(
+  //   () => state.age,
+  //   (oldValue, newValue) => {
+  //     console.log(oldValue, newValue)
+  //   }
+  // )
+  //
+  // setTimeout(() => {
+  //   state.age++
+  // }, 1000)
 
   // console.log(data)
 

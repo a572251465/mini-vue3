@@ -20,7 +20,9 @@ var VueReactivity = (() => {
   // packages/reactivity/src/index.ts
   var src_exports = {};
   __export(src_exports, {
+    ComputedRefImpl: () => ComputedRefImpl,
     ReactiveFlags: () => ReactiveFlags,
+    computed: () => computed,
     effect: () => effect,
     isProxy: () => isProxy,
     isReactive: () => isReactive,
@@ -39,6 +41,7 @@ var VueReactivity = (() => {
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var hasOwn = (val, key) => hasOwnProperty.call(val, key);
   var hasChanged = (value, oldValue) => !Object.is(value, oldValue);
+  var isFunction = (fn) => typeof fn === "function";
 
   // packages/reactivity/src/dep.ts
   var createDep = (effects = []) => {
@@ -141,6 +144,16 @@ var VueReactivity = (() => {
   // packages/reactivity/src/ref.ts
   function isRef(r) {
     return !!(r && r.__v_isRef === true);
+  }
+  function trackRefValue(ref) {
+    if (activeEffect) {
+      trackEffects(ref.dep || (ref.dep = createDep()));
+    }
+  }
+  function triggerRefValue(ref) {
+    if (ref.dep) {
+      triggerEffects(ref.dep);
+    }
   }
 
   // packages/reactivity/src/baseHandlers.ts
@@ -287,6 +300,49 @@ var VueReactivity = (() => {
   }
   function watch(source, cb, options = {}) {
     return doWatch(source, cb, options);
+  }
+
+  // packages/reactivity/src/computed.ts
+  var ComputedRefImpl = class {
+    constructor(getter, _setter) {
+      this._setter = _setter;
+      this.__v_isRef = true;
+      this._dirty = true;
+      this.effect = new ReactiveEffect(getter, () => {
+        if (!this._dirty) {
+          this._dirty = true;
+          triggerRefValue(this);
+        }
+      });
+      this.effect.computed = this;
+      this.effect.active = true;
+    }
+    get value() {
+      trackRefValue(this);
+      if (this._dirty) {
+        this._dirty = false;
+        this._value = this.effect.run();
+      }
+      return this._value;
+    }
+    set value(value) {
+      this._setter(value);
+    }
+  };
+  function computed(getterOrOptions, debugOptions, isSSR = false) {
+    let getter, setter;
+    const onlyGetter = isFunction(getterOrOptions);
+    if (onlyGetter) {
+      getter = getterOrOptions;
+      setter = () => {
+        console.warn("Write operation failed: computed value is readonly");
+      };
+    } else {
+      getter = getterOrOptions.get;
+      setter = getterOrOptions.set;
+    }
+    const cRef = new ComputedRefImpl(getter, setter);
+    return cRef;
   }
   return __toCommonJS(src_exports);
 })();

@@ -14,3 +14,5 @@ export { effect } from './effect'
 export { isRef } from './ref'
 
 export { watch } from './apiWatch'
+
+export { computed, ComputedRefImpl } from './computed'
