@@ -6,12 +6,13 @@ export {
   ReactiveFlags,
   Target,
   isReactive,
-  isProxy
+  isProxy,
+  toReactive
 } from './reactive'
 
 export { effect } from './effect'
 
-export { isRef } from './ref'
+export { isRef, ref } from './ref'
 
 export { watch } from './apiWatch'
 

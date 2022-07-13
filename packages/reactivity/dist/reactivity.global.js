@@ -31,6 +31,8 @@ var VueReactivity = (() => {
     reactive: () => reactive,
     reactiveMap: () => reactiveMap,
     readonly: () => readonly,
+    ref: () => ref,
+    toReactive: () => toReactive,
     watch: () => watch
   });
 
@@ -145,15 +147,43 @@ var VueReactivity = (() => {
   function isRef(r) {
     return !!(r && r.__v_isRef === true);
   }
-  function trackRefValue(ref) {
+  function trackRefValue(ref2) {
     if (activeEffect) {
-      trackEffects(ref.dep || (ref.dep = createDep()));
+      trackEffects(ref2.dep || (ref2.dep = createDep()));
     }
   }
-  function triggerRefValue(ref) {
-    if (ref.dep) {
-      triggerEffects(ref.dep);
+  function triggerRefValue(ref2) {
+    if (ref2.dep) {
+      triggerEffects(ref2.dep);
     }
+  }
+  var RefImpl = class {
+    constructor(value, __v_isShallow) {
+      this.__v_isShallow = __v_isShallow;
+      this.dep = void 0;
+      this.__v_isRef = true;
+      this._rawValue = value;
+      this._value = toReactive(value);
+    }
+    get value() {
+      trackRefValue(this);
+      return this._value;
+    }
+    set value(newVal) {
+      if (hasChanged(newVal, this._rawValue)) {
+        this._rawValue = newVal;
+        this._value = toReactive(newVal);
+        triggerRefValue(this);
+      }
+    }
+  };
+  function createRef(rawValue) {
+    if (isRef(rawValue))
+      return rawValue;
+    return new RefImpl(rawValue, false);
+  }
+  function ref(value) {
+    return createRef(value);
   }
 
   // packages/reactivity/src/baseHandlers.ts
@@ -241,6 +271,7 @@ var VueReactivity = (() => {
     }
     return !!(value && value["__v_isReactive" /* IS_REACTIVE */]);
   }
+  var toReactive = (value) => isObject(value) ? reactive(value) : value;
   function createReactiveObject(target, isReadonly2, baseHandlers, collectionHandlers, proxyMap) {
     if (!isObject(target)) {
       return target;

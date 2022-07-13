@@ -14,22 +14,31 @@
 <body>
 <div id='root'></div>
 <script>
-  const { reactive, readonly, effect, watch, computed } = VueReactivity
+  const { reactive, readonly, effect, watch, computed, ref } = VueReactivity
 
-  const state = reactive({
-    name: 'lihh',
-    age: 23
-  })
-
-  const age = computed(() => state.age * 2)
-
+  const age = ref(20)
   effect(() => {
-    document.getElementById('root').innerHTML = `姓名是：${state.name}, 年龄是：${age.value}`
+    document.getElementById('root').innerHTML = `我的年龄是：${age.value}`
   })
 
   setTimeout(() => {
-    state.age = 30
-  }, 1000)
+    age.value++
+  }, 2000)
+
+  // const state = reactive({
+  //   name: 'lihh',
+  //   age: 23
+  // })
+  //
+  // const age = computed(() => state.age * 2)
+  //
+  // effect(() => {
+  //   document.getElementById('root').innerHTML = `姓名是：${state.name}, 年龄是：${age.value}`
+  // })
+  //
+  // setTimeout(() => {
+  //   state.age = 30
+  // }, 1000)
 
   // effect(() => {
   //   document.getElementById(

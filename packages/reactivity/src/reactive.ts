@@ -43,6 +43,9 @@ export function isReactive(value: unknown): boolean {
   return !!(value && (value as Target)[ReactiveFlags.IS_REACTIVE])
 }
 
+export const toReactive = <T extends unknown>(value: T) =>
+  isObject(value) ? reactive(value as any) : value
+
 // 为了创建响应式模块方法
 function createReactiveObject(
   target: Target,
